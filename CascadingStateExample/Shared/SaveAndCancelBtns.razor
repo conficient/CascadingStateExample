@@ -1,0 +1,53 @@
+﻿@implements IDisposable
+@using CascadingStateExample.States
+
+@if (ButtonState != null)
+{
+    if (ButtonState.Visible)
+    {
+        <div class="footer-body__right--item">
+            <button class="btn btn-primary" @onclick="Save" type="submit">Save</button>
+        </div>
+        <div class="footer-body__right--item">
+            <button class="btn btn-cancel" @onclick="Cancel">Cancel</button>
+        </div>
+    }
+}
+else
+{
+    <b>NO BUTTON STATE FOUND</b>
+}
+
+@code
+{
+    [CascadingParameter] public ButtonStates ButtonState { get; set; }
+
+
+    protected override void OnParametersSet()
+    {
+        // wire up event handler to spot changes to visiblity
+        ButtonState.OnVisibilityChanged += VisibilityChanged;
+    }
+
+    /// <summary>
+    /// Handle a change of visibility
+    /// </summary>
+    /// <param name="visible"></param>
+    private void VisibilityChanged(bool visible)
+    {
+        StateHasChanged();
+    }
+
+    // send the save event to the state container
+    void Save() => ButtonState.Save("save");
+
+    // send the cancel event to the state container
+    void Cancel() => ButtonState.Cancel("cancel");
+
+
+    void IDisposable.Dispose()
+    {
+        // remove event handler
+        ButtonState.OnVisibilityChanged -= VisibilityChanged;
+    }
+}

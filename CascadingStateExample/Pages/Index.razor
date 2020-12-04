@@ -1,0 +1,70 @@
+﻿@page "/"
+@using CascadingStateExample.States
+@implements IDisposable
+
+<h1>Form Page</h1>
+<button @onclick="ToggleForm">Toggle Form</button>
+@if (formVisible)
+{
+    <p>
+        Form Goes Here
+    </p>
+
+    <p>
+        The buttons should now appear!
+    </p>
+}
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-info">
+        @message
+    </div>
+}
+
+@code
+{
+
+    [CascadingParameter] public ButtonStates ButtonState { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // wire up handlers
+        ButtonState.OnSaved += HandleEvent;
+        ButtonState.OnCancelled += HandleEvent;
+    }
+
+    string message;
+
+    void ToggleForm()
+    {
+        formVisible = !formVisible;
+
+        // clear message when re-showing the form
+        if (formVisible)
+            message = null;
+        // notify state container of the change
+        ButtonState.Visible = formVisible;
+    }
+
+    bool formVisible = false;
+
+    // handle Save and Cancel events
+    void HandleEvent(string value)
+    {
+        message = $"{value} was pressed";
+        // toggle form also which hides the buttons
+        ToggleForm();
+
+        // the button isn't in our control tree so we need to call StateHasChanged
+        // see https://www.blazor.expert/2020/09/faq-why-isnt-my-component-updating-when.html
+        StateHasChanged();
+    }
+
+    void IDisposable.Dispose()
+    {
+        ButtonState.OnSaved -= HandleEvent;
+        ButtonState.OnCancelled -= HandleEvent;
+    }
+
+}
+
